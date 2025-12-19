@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comparador de Firmas</title>
+    <style>
+        body {
+            background: #0b1220;
+            color: #e5e7eb;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        button {
+            background: #22c55e;
+            color: black;
+            padding: 10px 16px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .resultado {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .no { color: #ef4444; }
+        .dudoso { color: #eab308; }
+        .parcial { color: #fb923c; }
+        .alta { color: #22c55e; }
+
+        img {
+            margin-top: 15px;
+            max-width: 100%;
+            border: 2px solid #22c55e;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✍️ Comparador de Firmas</h1>
+
+    <label>INE:</label><br>
+    <input type="file" id="ine"><br><br>
+
+    <label>Documento:</label><br>
+    <input type="file" id="documento"><br><br>
+
+    <button onclick="comparar()">Comparar</button>
+
+    <div id="resultado" class="resultado"></div>
+    <img id="imagen" />
+</div>
+
+<script>
+async function comparar() {
+    const ine = document.getElementById("ine").files[0];
+    const documento = document.getElementById("documento").files[0];
+
+    if (!ine || !documento) {
+        alert("Selecciona ambos archivos");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("ine", ine);
+    formData.append("documento", documento);
+
+    const res = await fetch("http://localhost:8000/api/compare", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    const clase = obtenerClase(data.dictamen);
+
+    document.getElementById("resultado").innerHTML = `
+        <b>Similitud:</b> ${data.similitud}% <br>
+        <b class="${clase}">${data.dictamen}</b>
+    `;
+
+    document.getElementById("imagen").src =
+        "data:image/jpeg;base64," + data.imagen;
+}
+
+function obtenerClase(dictamen) {
+    if (dictamen === "No coincide") return "no";
+    if (dictamen === "Dudoso") return "dudoso";
+    if (dictamen === "Coincidencia parcial") return "parcial";
+    return "alta";
+}
+</script>
+
+</body>
+</html>
