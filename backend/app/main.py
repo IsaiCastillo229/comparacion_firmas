@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.compare import router as compare_router
+from app.routes.mirada import router as gaze_router
+
 
 app = FastAPI()
 
@@ -13,4 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(compare_router, prefix="/api")
+app.include_router(gaze_router, prefix="/api")
+

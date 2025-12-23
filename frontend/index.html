@@ -1,105 +1,268 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Comparador de Firmas</title>
-    <style>
-        body {
-            background: #0b1220;
-            color: #e5e7eb;
-            font-family: Arial, sans-serif;
-        }
+<meta charset="UTF-8">
+<title>Validación Biométrica</title>
 
-        .container {
-            max-width: 600px;
-            margin: 40px;
-        }
+<style>
+:root {
+    --bg: #020617;
+    --card: #0b1220;
+    --primary: #38bdf8;
+    --success: #22c55e;
+    --warning: #eab308;
+    --danger: #ef4444;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+}
 
-        h1 {
-            color: #38bdf8;
-        }
+* { box-sizing: border-box; }
 
-        button {
-            background: #22c55e;
-            color: black;
-            padding: 10px 16px;
-            border: none;
-            cursor: pointer;
-            margin-top: 10px;
-            font-weight: bold;
-        }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        .resultado {
-            margin-top: 20px;
-            font-size: 18px;
-        }
+.app {
+    width: 100%;
+    max-width: 720px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 0 50px rgba(0,0,0,.7);
+    overflow: hidden;
+}
 
-        .no { color: #ef4444; }
-        .dudoso { color: #eab308; }
-        .parcial { color: #fb923c; }
-        .alta { color: #22c55e; }
+/* MENU */
+.menu {
+    display: flex;
+    background: #020617;
+}
 
-        img {
-            margin-top: 15px;
-            max-width: 100%;
-            border: 2px solid #22c55e;
-        }
-    </style>
+.menu button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.menu button.active {
+    background: var(--card);
+    color: var(--primary);
+}
+
+/* CONTENT */
+.content {
+    padding: 30px;
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+h2 {
+    margin-top: 0;
+    color: var(--primary);
+}
+
+/* FORM */
+.field { margin-bottom: 16px; }
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    background: #020617;
+    color: var(--text);
+    border-radius: 8px;
+    border: 1px solid #1f2937;
+}
+
+button.action {
+    width: 100%;
+    background: var(--success);
+    color: #020617;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.result {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 10px;
+    background: #020617;
+    display: none;
+}
+
+.preview {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.preview img {
+    max-width: 100%;
+    border-radius: 10px;
+    border: 2px solid var(--success);
+}
+
+.loader {
+    text-align: center;
+    color: var(--primary);
+    display: none;
+    margin-top: 10px;
+}
+</style>
 </head>
+
 <body>
 
-<div class="container">
-    <h1>✍️ Comparador de Firmas</h1>
+<div class="app">
 
-    <label>INE:</label><br>
-    <input type="file" id="ine"><br><br>
+    <div class="menu">
+        <button id="tab-mirada" class="active" onclick="showSection('mirada')">👁️ Mirada</button>
+        <button id="tab-firmas" onclick="showSection('firmas')">✍️ Firmas</button>
+    </div>
 
-    <label>Documento:</label><br>
-    <input type="file" id="documento"><br><br>
+    <div class="content">
 
-    <button onclick="comparar()">Comparar</button>
+        <!-- MIRADA -->
+        <div id="mirada" class="section active">
+            <h2>Detección de Mirada</h2>
 
-    <div id="resultado" class="resultado"></div>
-    <img id="imagen" />
+            <div class="field">
+                <label>Imagen (selfie)</label>
+                <input type="file" id="mirada_img" accept="image/*">
+            </div>
+
+            <button class="action" onclick="analizarMirada()">Analizar mirada</button>
+
+            <div id="mirada_loader" class="loader">Analizando imagen...</div>
+            <div id="mirada_result" class="result"></div>
+
+            <div class="preview">
+                <img id="mirada_preview">
+            </div>
+        </div>
+
+        <!-- FIRMAS -->
+        <div id="firmas" class="section">
+            <h2>Comparador de Firmas</h2>
+
+            <div class="field">
+                <label>INE</label>
+                <input type="file" id="ine" accept="image/*">
+            </div>
+
+            <div class="field">
+                <label>Documento</label>
+                <input type="file" id="documento" accept="image/*">
+            </div>
+
+            <button class="action" onclick="compararFirmas()">Comparar firmas</button>
+
+            <div id="firmas_loader" class="loader">Analizando firmas...</div>
+            <div id="firmas_result" class="result"></div>
+
+            <div class="preview">
+                <img id="firmas_preview">
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script>
-async function comparar() {
-    const ine = document.getElementById("ine").files[0];
-    const documento = document.getElementById("documento").files[0];
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
 
-    if (!ine || !documento) {
-        alert("Selecciona ambos archivos");
-        return;
-    }
+    document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+    document.getElementById("tab-" + id).classList.add("active");
+}
 
-    const formData = new FormData();
-    formData.append("ine", ine);
-    formData.append("documento", documento);
+/* ===== MIRADA ===== */
+async function analizarMirada() {
+    const img = document.getElementById("mirada_img").files[0];
+    if (!img) return alert("Selecciona una imagen");
 
-    const res = await fetch("http://localhost:8000/api/compare", {
+    const loader = document.getElementById("mirada_loader");
+    const result = document.getElementById("mirada_result");
+    const preview = document.getElementById("mirada_preview");
+
+    loader.style.display = "block";
+    result.style.display = "none";
+    preview.src = "";
+
+    const fd = new FormData();
+    fd.append("file", img); // 🔥 coincide con FastAPI
+
+    const res = await fetch("http://localhost:8000/api/mirada", {
         method: "POST",
-        body: formData
+        body: fd
     });
 
     const data = await res.json();
 
-    const clase = obtenerClase(data.dictamen);
-
-    document.getElementById("resultado").innerHTML = `
-        <b>Similitud:</b> ${data.similitud}% <br>
-        <b class="${clase}">${data.dictamen}</b>
+    result.innerHTML = `
+        <b>${data.veredicto}</b><br>
+        Confianza: ${data.confidence}%<br>
+        Ratio: ${data.ratio}
     `;
+    result.style.display = "block";
 
-    document.getElementById("imagen").src =
-        "data:image/jpeg;base64," + data.imagen;
+    preview.src = "data:image/jpeg;base64," + data.imagen;
+    loader.style.display = "none";
 }
 
-function obtenerClase(dictamen) {
-    if (dictamen === "No coincide") return "no";
-    if (dictamen === "Dudoso") return "dudoso";
-    if (dictamen === "Coincidencia parcial") return "parcial";
-    return "alta";
+/* ===== FIRMAS ===== */
+async function compararFirmas() {
+    const ine = document.getElementById("ine").files[0];
+    const doc = document.getElementById("documento").files[0];
+    if (!ine || !doc) return alert("Selecciona ambos archivos");
+
+    const loader = document.getElementById("firmas_loader");
+    const result = document.getElementById("firmas_result");
+    const preview = document.getElementById("firmas_preview");
+
+    loader.style.display = "block";
+    result.style.display = "none";
+    preview.src = "";
+
+    const fd = new FormData();
+    fd.append("ine", ine);
+    fd.append("documento", doc);
+
+    const res = await fetch("http://localhost:8000/api/compare", {
+        method: "POST",
+        body: fd
+    });
+
+    const data = await res.json();
+
+    result.innerHTML = `
+        Similitud: ${data.similitud}%<br>
+        <b>${data.dictamen}</b>
+    `;
+    result.style.display = "block";
+
+    preview.src = "data:image/jpeg;base64," + data.imagen;
+    loader.style.display = "none";
 }
 </script>
 
