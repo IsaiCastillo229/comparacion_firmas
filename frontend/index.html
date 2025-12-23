@@ -212,7 +212,7 @@ async function analizarMirada() {
     const fd = new FormData();
     fd.append("file", img); // 🔥 coincide con FastAPI
 
-    const res = await fetch("http://localhost:8000/api/mirada", {
+    const res = await fetch("https://comparacion-firmas.onrender.com/api/mirada", {
         method: "POST",
         body: fd
     });
@@ -248,7 +248,7 @@ async function compararFirmas() {
     fd.append("ine", ine);
     fd.append("documento", doc);
 
-    const res = await fetch("http://localhost:8000/api/compare", {
+    const res = await fetch("https://comparacion-firmas.onrender.com/api/compare", {
         method: "POST",
         body: fd
     });
